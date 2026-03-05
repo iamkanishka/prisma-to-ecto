@@ -1,6 +1,6 @@
 {
   "name": "prisma-to-ecto",
-  "version": "1.0.9",
+  "version": "0.0.1",
   "description": "Convert Prisma schema to Ecto schema with migrations",
   "main": "dist/index.js",
   "bin": {
@@ -8,10 +8,14 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:test": "tsc -p tsconfig.test.json",
     "start": "node dist/index.js",
-    "bnp": "npm run build & npm publish",
-    "bnl": "npm run build & npm link & prisma-to-ecto convert"
-
+    "test": "npm run build:test && node dist-test/test/run_tests.js",
+    "convert": "npm run build && node dist/index.js convert",
+    "convert:watch": "tsc --watch",
+    "bnp": "npm run build && npm publish",
+    "bnl": "npm run build && npm link && prisma-to-ecto convert",
+    "prepublishOnly": "npm run build && npm test"
   },
   "homepage": "https://github.com/iamkanishka/prisma-to-ecto/blob/master/readme.md",
   "keywords": [
@@ -27,13 +31,12 @@
     "url": "git+https://github.com/iamkanishka/prisma-to-ecto"
   },
   "author": "Kanishka Naik",
-
   "bugs": {
     "url": "https://github.com/iamkanishka/prisma-to-ecto/issues",
     "email": "kanishkabc123@gmail.com"
   },
   "devDependencies": {
-    "@types/node": "^14.0.0",
+    "@types/node": "^14.18.63",
     "ts-node": "^10.0.0",
     "typescript": "^4.0.0"
   }

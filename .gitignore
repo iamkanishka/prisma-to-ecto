@@ -1,4 +1,34 @@
-/node_modules
-/prisma
-/prisma-to-ecto
-/src
+# Dependencies
+node_modules/
+
+# Build output (committed for npm, ignored for git cleanliness)
+# Keep dist/ tracked so npm publish works without a build step on install
+# dist/
+
+# Test build output (never needed in git)
+dist-test/
+
+# Generated Ecto output (user's local conversion results)
+prisma-to-ecto/
+
+# Prisma (user's own schema — not part of the package)
+prisma/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
