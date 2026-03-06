@@ -1,6 +1,6 @@
 {
   "name": "prisma-to-ecto",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Convert Prisma schema to Ecto schema with migrations",
   "main": "dist/index.js",
   "bin": {
