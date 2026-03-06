@@ -1,0 +1,21 @@
+# ── Source & Tests (not needed by consumers) ─────────────────────
+src/
+tests/
+test/
+coverage/
+dist-test/
+
+# ── Config files ─────────────────────────────────────────────────
+.eslintrc.cjs
+.prettierrc
+.gitignore
+tsconfig*.json
+vitest.config.ts
+
+# ── CI ───────────────────────────────────────────────────────────
+.github/
+
+# ── Logs & OS ────────────────────────────────────────────────────
+*.log
+.DS_Store
+Thumbs.db
