@@ -1,164 +1,161 @@
-# prisma-to-ecto — Setup & Testing Guide
+# prisma-to-ecto
 
-## 1. Project Structure
+Convert **Prisma schemas** into **Elixir Ecto schemas and migrations**.
 
-Put all files like this inside your project folder:
+`prisma-to-ecto` is a CLI tool that reads a Prisma `schema.prisma` file and generates:
+
+* Ecto schemas (`.ex`)
+* Ecto migrations (`.exs`)
+* Enum modules
+* Join tables for implicit many-to-many relations
+* View schema stubs
+
+It helps teams migrating from **Prisma → Elixir / Phoenix / Ecto** or maintaining a **Prisma-first schema workflow**.
+
+---
+
+# Installation
+
+## Global Installation (Recommended)
+
+```bash
+npm install -g prisma-to-ecto
+```
+
+Run the CLI:
+
+```bash
+prisma-to-ecto convert
+```
+
+---
+
+## Local Installation
+
+Install inside your project:
+
+```bash
+npm install --save-dev prisma-to-ecto
+```
+
+Run using `npx`:
+
+```bash
+npx prisma-to-ecto convert
+```
+
+---
+
+# Project Structure
+
+Your project only needs the Prisma schema.
+
+Example:
 
 ```
-my-converter/
+my-project/
 ├── prisma/
-│   └── schema.prisma          ← put the schema here (see attached schema.prisma)
-├── src/
-│   ├── types.ts
-│   ├── utils.ts
-│   ├── parser.ts
-│   ├── ectoGenerator.ts
-│   ├── migrationGenerator.ts
-│   └── index.ts
-├── test/
-│   └── run_tests.ts
-├── tsconfig.json
-├── tsconfig.test.json
+│   └── schema.prisma
+├── lib/
+│   └── my_app/
+├── priv/
+│   └── repo/
+│       └── migrations/
 └── package.json
 ```
 
----
-
-## 2. Install Dependencies
-
-```bash
-mkdir my-converter && cd my-converter
-
-# Init npm
-npm init -y
-
-# TypeScript + types
-npm install --save-dev typescript @types/node ts-node
-
-# Create tsconfig.json
-cat > tsconfig.json << 'EOF'
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "sourceMap": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-}
-EOF
-
-# Create tsconfig.test.json
-cat > tsconfig.test.json << 'EOF'
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist-test",
-    "rootDir": "."
-  },
-  "include": ["src/**/*", "test/**/*"]
-}
-EOF
-```
+Only **`prisma/schema.prisma`** is required.
 
 ---
 
-## 3. Add the Source Files
+# Place Your Prisma Schema
 
-Copy all `.ts` files from this package into `src/` and `test/`:
-
-```
-src/types.ts
-src/utils.ts
-src/parser.ts
-src/ectoGenerator.ts
-src/migrationGenerator.ts
-src/index.ts
-test/run_tests.ts
-```
-
----
-
-## 4. Place the Schema
+Create the Prisma directory if it doesn't exist:
 
 ```bash
 mkdir -p prisma
-# Copy schema.prisma into prisma/schema.prisma
 ```
 
-The schema (`schema.prisma`) is a real-world SaaS project management platform with:
+Place your schema at:
 
-| Feature                     | Example                                              |
-|-----------------------------|------------------------------------------------------|
-| **UUID primary keys**       | All models use `@id @default(uuid())`                |
-| **`@@schema`**              | `User`, `Session`, `OAuthAccount`, `NotifPref` in `auth` schema |
-| **Referential actions**     | `onDelete: Cascade`, `SetNull`, `Restrict`           |
-| **Named relations**         | `Task` → `assignee`/`reporter` both point to `User`  |
-| **Self-referential**        | `Task.subtasks`, `Comment.replies`                   |
-| **`@db.*` annotations**     | `@db.VarChar(320)`, `@db.Text`, `@db.Decimal(10,2)` |
-| **`@@index` with `map:`**   | All indexes have custom DB names                     |
-| **`@@fulltext`**            | `Task` title + description full-text index           |
-| **Enum `@map`**             | `TaskStatus.IN_PROGRESS @map("in_progress")`         |
-| **Composite `@@id`**        | `NotificationPreference` on `[userId, channel]`      |
-| **`@@unique` with `map:`**  | `OAuthAccount`, `OrgMembership`, etc.                |
-| **`@@map` table override**  | `AuditLog` → `audit_logs` table                      |
-| **`view` block**            | `ProjectStats` analytics view                        |
-| **`BigInt`**                | `Attachment.sizeBytes`                               |
-| **`Decimal`**               | `Organisation.storageGb`, `Invoice.amountCents`      |
-| **`Json`**                  | `Task.metadata`, `Invoice.lineItems`                 |
-| **Implicit many-to-many**   | `Task ↔ Label` (no join model in schema)             |
-| **Sensitive field redaction** | `passwordHash`, `apiSecret`, `secret`, `token`     |
+```
+prisma/schema.prisma
+```
 
 ---
 
-## 5. Run the Converter
+# Running the Converter
+
+## Default Conversion
 
 ```bash
-# Compile TypeScript
-npx tsc
-
-# Convert with defaults (reads ./prisma/schema.prisma)
-node dist/index.js convert
-
-# Or with explicit paths
-node dist/index.js convert ./prisma/schema.prisma \
-  --schema-out ./lib/my_app \
-  --migration-out ./priv/repo/migrations
-
-# Schemas only (skip migrations)
-node dist/index.js convert --no-migrations
-
-# Migrations only (skip schemas)
-node dist/index.js convert --no-schemas
-
-# Help
-node dist/index.js --help
+npx prisma-to-ecto convert
 ```
 
-**Expected output:**
+Default output:
+
+```
+Schema: ./prisma/schema.prisma
+Schemas → ./prisma-to-ecto/schemas
+Migrations → ./prisma-to-ecto/migrations
+```
+
+---
+
+## Custom Output Directories
+
+```bash
+npx prisma-to-ecto convert ./prisma/schema.prisma \
+  --schema-out ./lib/my_app \
+  --migration-out ./priv/repo/migrations
+```
+
+---
+
+## Generate Schemas Only
+
+```bash
+npx prisma-to-ecto convert --no-migrations
+```
+
+---
+
+## Generate Migrations Only
+
+```bash
+npx prisma-to-ecto convert --no-schemas
+```
+
+---
+
+## CLI Help
+
+```bash
+npx prisma-to-ecto --help
+```
+
+---
+
+# Example Output
+
 ```
 prisma-to-ecto
   Schema:    ./prisma/schema.prisma
-  Schemas →  ./prisma-to-ecto/schemas
-  Migrations → ./prisma-to-ecto/migrations
+  Schemas →  ./lib/my_app
+  Migrations → ./priv/repo/migrations
 
 Parsed 20 model(s), 8 enum(s)
 
 Generating Ecto schemas...
-  ✓ prisma-to-ecto/schemas/user.ex
-  ✓ prisma-to-ecto/schemas/task.ex
+  ✓ user.ex
+  ✓ task.ex
+  ✓ project_stats.ex
   ... (28 total files)
 
 Generating migrations...
-  ✓ prisma-to-ecto/migrations/..._create_users.exs
-  ✓ prisma-to-ecto/migrations/..._create_tasks.exs
+  ✓ ..._create_users.exs
+  ✓ ..._create_tasks.exs
+  ✓ ..._create_label_task.exs
   ... (23 total files)
 
 ✓ Done!
@@ -166,71 +163,94 @@ Generating migrations...
 
 ---
 
-## 6. Run the Test Suite
+# Generated Files
 
-```bash
-# Compile tests
-npx tsc -p tsconfig.test.json
+Example structure:
 
-# Run all 197 tests
-node dist-test/test/run_tests.js
+```
+lib/my_app/
+├── user.ex
+├── task.ex
+├── notification_preference.ex
+├── audit_log.ex
+└── user_role.ex
+
+priv/repo/migrations/
+├── ..._create_users.exs
+├── ..._create_tasks.exs
+├── ..._create_label_task.exs
+└── ..._create_view_project_statses.exs
 ```
 
-**Expected output:**
-```
-Results: 197 passed, 0 failed
-```
+---
 
-Or add npm scripts to `package.json`:
+# Supported Prisma Features
+
+The converter supports advanced Prisma schema features.
+
+| Feature                   | Example                          |
+| ------------------------- | -------------------------------- |
+| UUID primary keys         | `@id @default(uuid())`           |
+| Database schemas          | `@@schema("auth")`               |
+| Referential actions       | `Cascade`, `SetNull`, `Restrict` |
+| Named relations           | `Task.assignee`, `Task.reporter` |
+| Self-referential models   | `Task.subtasks`                  |
+| Database annotations      | `@db.VarChar(320)`               |
+| Full-text indexes         | `@@fulltext`                     |
+| Enum mapping              | `@map`                           |
+| Composite primary keys    | `@@id([userId, channel])`        |
+| Custom table names        | `@@map`                          |
+| Views                     | `view ProjectStats`              |
+| BigInt                    | `Attachment.sizeBytes`           |
+| Decimal                   | `Invoice.amountCents`            |
+| JSON fields               | `Json`                           |
+| Implicit many-to-many     | `Task ↔ Label`                   |
+| Sensitive field detection | password / secret / token        |
+
+---
+
+# Manual Review After Conversion
+
+The generator may add `TODO` comments for items requiring manual review.
+
+| Item           | Location             | Action                                  |
+| -------------- | -------------------- | --------------------------------------- |
+| Foreign keys   | `User.assignedTasks` | Set correct `foreign_key:`              |
+| Database views | View migration       | Write SQL query                         |
+| Enums          | Migrations           | Create Postgres enum type or use string |
+
+---
+
+# Example package.json Script
+
+Add a shortcut command:
+
 ```json
 {
   "scripts": {
-    "build":    "tsc",
-    "build:test": "tsc -p tsconfig.test.json",
-    "test":     "npm run build:test && node dist-test/test/run_tests.js",
-    "convert":  "npm run build && node dist/index.js convert"
+    "convert": "prisma-to-ecto convert"
   }
 }
 ```
 
-Then just:
+Run with:
+
 ```bash
-npm test
 npm run convert
 ```
 
 ---
 
-## 7. Output Locations
+# Using With Phoenix / Ecto
 
-After running, you'll find:
+After generating migrations:
 
-```
-prisma-to-ecto/
-├── schemas/
-│   ├── user.ex                    ← Ecto schema with @schema_prefix "auth"
-│   ├── task.ex                    ← Named relations, self-ref, fulltext note
-│   ├── project_stats.ex           ← Read-only view schema
-│   ├── notification_preference.ex ← Composite @primary_key false
-│   ├── audit_log.ex               ← @@map table name override
-│   ├── user_role.ex               ← EctoEnum module
-│   └── ... (28 files total)
-└── migrations/
-    ├── ..._create_users.exs       ← UUID PK, size: constraints, prefix:
-    ├── ..._create_tasks.exs       ← onDelete:, fulltext index, named indexes
-    ├── ..._create_label_task.exs  ← Implicit many-to-many join table
-    ├── ..._create_view_project_statses.exs  ← CREATE VIEW SQL stub
-    └── ... (23 files total)
+```bash
+mix ecto.migrate
 ```
 
 ---
 
-## 8. What to Manually Review After Conversion
+# License
 
-The converter flags these with `TODO` comments:
-
-| Item | Where | What to do |
-|------|-------|------------|
-| `TODO_set_correct_fk` | `has_many` on `User` (assignedTasks / reportedTasks) | Set the correct `foreign_key:` for each named relation |
-| `CREATE OR REPLACE VIEW ... SELECT ...` | View migration | Write the actual SQL query for `ProjectStats` |
-| Enum DB type in Postgres | Migrations use `:string` for enum columns | Run `CREATE TYPE` in Postgres or use string check constraints |
+MIT
