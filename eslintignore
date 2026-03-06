@@ -1,0 +1,5 @@
+# ── Never lint these ─────────────────────────────────────────────
+node_modules/
+dist/
+dist-test/
+coverage/
