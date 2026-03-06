@@ -15,15 +15,25 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateEctoSchema = void 0;
+exports.generateEctoSchema = generateEctoSchema;
 // src/ectoGenerator.ts
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
@@ -48,7 +58,6 @@ function generateEctoSchema(schema, outputDir) {
         console.log(`  \x1b[32m✓\x1b[0m ${filePath}`);
     }
 }
-exports.generateEctoSchema = generateEctoSchema;
 // ---------------------------------------------------------------------------
 // Enum module
 // ---------------------------------------------------------------------------
@@ -85,7 +94,9 @@ function renderViewModule(model, schema) {
         ? `  @schema_prefix "${model.dbSchema}"\n`
         : "";
     const primitiveFields = model.fields.filter((f) => f.isScalar && !f.isUpdatedAt);
-    const fieldLines = primitiveFields.map((f) => renderField(f, enumNames)).join("\n");
+    const fieldLines = primitiveFields
+        .map((f) => renderField(f, enumNames))
+        .join("\n");
     return trimLeading(`
 defmodule MyApp.${model.name} do
   @moduledoc """
@@ -159,7 +170,9 @@ function renderSchemaModule(model, schema) {
     ].join("\n");
     const hasEnumsUsed = primitiveFields.some((f) => f.type.startsWith("Ecto.Enum:"));
     const enumAlias = hasEnumsUsed ? "\n  alias MyApp.Enums\n" : "";
-    const timestampsLine = isJoinSchema ? "" : "    timestamps(type: :utc_datetime)\n";
+    const timestampsLine = isJoinSchema
+        ? ""
+        : "    timestamps(type: :utc_datetime)\n";
     return trimLeading(`
 defmodule MyApp.${model.name} do
   @moduledoc """
@@ -198,14 +211,14 @@ function renderPrimaryKeyAttr(model, pkField) {
         return "";
     switch (pkField.idKind) {
         case "uuid":
-            return "  @primary_key {:id, :binary_id, autogenerate: true}\n" +
-                "  @foreign_key_type :binary_id\n";
+            return ("  @primary_key {:id, :binary_id, autogenerate: true}\n" +
+                "  @foreign_key_type :binary_id\n");
         case "cuid":
         case "string":
             return "  @primary_key {:id, :string, autogenerate: false}\n";
         case "auto":
-            return "  @primary_key {:id, :binary_id, autogenerate: true}\n" +
-                "  @foreign_key_type :binary_id\n";
+            return ("  @primary_key {:id, :binary_id, autogenerate: true}\n" +
+                "  @foreign_key_type :binary_id\n");
         case "autoincrement":
         default:
             return ""; // Ecto default
@@ -267,8 +280,8 @@ function renderBelongsTo(field, schema) {
     // Referential action hint as comment
     const refComment = buildRefActionComment(field.relation.onDelete, field.relation.onUpdate);
     // UUID FK type
-    const relatedModel = schema.models.find(m => m.name === field.relation.relatedModel);
-    const relPk = relatedModel?.fields.find(f => f.isId);
+    const relatedModel = schema.models.find((m) => m.name === field.relation.relatedModel);
+    const relPk = relatedModel?.fields.find((f) => f.isId);
     if (relPk?.idKind === "uuid") {
         opts.push("type: :binary_id");
     }
@@ -311,7 +324,9 @@ function buildRefActionComment(onDelete, onUpdate) {
         parts.push(`onDelete: ${onDelete}`);
     if (onUpdate && onUpdate !== "Cascade")
         parts.push(`onUpdate: ${onUpdate}`);
-    return parts.length > 0 ? `    # Referential actions: ${parts.join(", ")}\n` : "";
+    return parts.length > 0
+        ? `    # Referential actions: ${parts.join(", ")}\n`
+        : "";
 }
 // ---------------------------------------------------------------------------
 // Validation generation

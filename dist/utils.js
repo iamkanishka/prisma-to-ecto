@@ -1,7 +1,19 @@
 "use strict";
 // src/utils.ts
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.referentialActionToEcto = exports.inferForeignKey = exports.atomList = exports.indent = exports.prismaDefaultToMigration = exports.nativeTypeSize = exports.nativeTypeToMigration = exports.prismaTypeToMigration = exports.prismaTypeToEcto = exports.toVarName = exports.toTableName = exports.pluralize = exports.toSnakeCase = void 0;
+exports.toSnakeCase = toSnakeCase;
+exports.pluralize = pluralize;
+exports.toTableName = toTableName;
+exports.toVarName = toVarName;
+exports.prismaTypeToEcto = prismaTypeToEcto;
+exports.prismaTypeToMigration = prismaTypeToMigration;
+exports.nativeTypeToMigration = nativeTypeToMigration;
+exports.nativeTypeSize = nativeTypeSize;
+exports.prismaDefaultToMigration = prismaDefaultToMigration;
+exports.indent = indent;
+exports.atomList = atomList;
+exports.inferForeignKey = inferForeignKey;
+exports.referentialActionToEcto = referentialActionToEcto;
 /**
  * Convert camelCase or PascalCase to snake_case.
  * "UserProfile" -> "user_profile"
@@ -13,7 +25,6 @@ function toSnakeCase(str) {
         .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
         .toLowerCase();
 }
-exports.toSnakeCase = toSnakeCase;
 /**
  * Pluralize a snake_case model name for use as a DB table.
  * Handles: -quiz -> -quizzes, -y -> -ies, -s/-sh/-ch/-x/-z -> -es, default +s
@@ -30,7 +41,6 @@ function pluralize(word) {
         return word + "es";
     return word + "s";
 }
-exports.pluralize = pluralize;
 /**
  * Convert a PascalCase model name to its Ecto table name.
  */
@@ -39,14 +49,12 @@ function toTableName(modelName, override) {
         return override;
     return pluralize(toSnakeCase(modelName));
 }
-exports.toTableName = toTableName;
 /**
  * Convert a PascalCase model name to an Elixir variable name.
  */
 function toVarName(modelName) {
     return toSnakeCase(modelName);
 }
-exports.toVarName = toVarName;
 /**
  * Map Prisma scalar types to Ecto schema field types.
  */
@@ -64,7 +72,6 @@ function prismaTypeToEcto(prismaType) {
         default: return "string";
     }
 }
-exports.prismaTypeToEcto = prismaTypeToEcto;
 /**
  * Map Prisma scalar types to Ecto migration column types.
  */
@@ -82,7 +89,6 @@ function prismaTypeToMigration(prismaType) {
         default: return "string";
     }
 }
-exports.prismaTypeToMigration = prismaTypeToMigration;
 /**
  * Map a @db.* native type annotation to the most appropriate Ecto migration type.
  * Falls back to the Prisma scalar type mapping when unknown.
@@ -138,7 +144,6 @@ function nativeTypeToMigration(nativeType, fallbackPrismaType) {
         default: return prismaTypeToMigration(fallbackPrismaType);
     }
 }
-exports.nativeTypeToMigration = nativeTypeToMigration;
 /**
  * When @db.VarChar(n) is present, return the column size limit string
  * like `, size: 255` for migrations.
@@ -147,7 +152,6 @@ function nativeTypeSize(nativeType) {
     const m = /\((\d+)\)/.exec(nativeType);
     return m ? m[1] : undefined;
 }
-exports.nativeTypeSize = nativeTypeSize;
 /**
  * Convert a Prisma @default value to an Ecto migration default expression.
  */
@@ -177,7 +181,6 @@ function prismaDefaultToMigration(def, prismaType) {
             return undefined;
     }
 }
-exports.prismaDefaultToMigration = prismaDefaultToMigration;
 /**
  * Indent each line of a multi-line string by N spaces.
  */
@@ -188,7 +191,6 @@ function indent(str, spaces) {
         .map((l) => (l.trim() ? pad + l : l))
         .join("\n");
 }
-exports.indent = indent;
 /**
  * Wrap an array of strings as an Elixir list literal.
  * ["a", "b"] -> "[:a, :b]"
@@ -196,7 +198,6 @@ exports.indent = indent;
 function atomList(items) {
     return `[${items.map((i) => `:${i}`).join(", ")}]`;
 }
-exports.atomList = atomList;
 /**
  * Derive the conventional FK field name from a relation field name.
  * "author" -> "author_id"
@@ -204,7 +205,6 @@ exports.atomList = atomList;
 function inferForeignKey(fieldName) {
     return `${toSnakeCase(fieldName)}_id`;
 }
-exports.inferForeignKey = inferForeignKey;
 /**
  * Map a Prisma referential action to the Ecto on_delete/on_update atom.
  */
@@ -218,5 +218,4 @@ function referentialActionToEcto(action) {
         default: return "nothing";
     }
 }
-exports.referentialActionToEcto = referentialActionToEcto;
 //# sourceMappingURL=utils.js.map
